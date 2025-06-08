@@ -57,7 +57,7 @@ app.config.update({
 })
 
 # Set Tesseract path (update this to your Tesseract installation path)
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+#pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # Create directories
 for folder in ["videos", app.config['FRAME_FOLDER'], app.config['CHART_FOLDER'],
