@@ -1,12 +1,6 @@
-Flask
-opencv-python-headless
-pytesseract
+Flask==2.2.5
+numpy==1.24.4
+opencv-python
 seaborn
 matplotlib
-numpy
-yt-dlp
-moviepy
 scikit-learn
-joblib
-setuptools
-wheel
