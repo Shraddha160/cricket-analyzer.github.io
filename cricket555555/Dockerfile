@@ -1,12 +1,18 @@
-# Install system dependencies first
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and ensure Python build tools are available
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     python3-dev \
     python3-distutils \
+    python3-venv \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Then create venv and install requirements
-RUN --mount=type=cache,id=s/5e320008-89d7-4ab6-a9ac-d5e7ed64514c-/root/cache/pip,target=/root/.cache/pip \
-    python -m venv --copies /opt/venv && \
+# Create virtual environment with system site packages temporarily
+RUN python3 -m venv --system-site-packages /opt/venv && \
     . /opt/venv/bin/activate && \
-    pip install --upgrade pip && \
+    python3 -m pip install --upgrade pip setuptools wheel
+
+# Now install your requirements with the cache mount
+RUN --mount=type=cache,id=pip-cache,target=/root/.cache/pip \
+    . /opt/venv/bin/activate && \
     pip install -r requirements.txt
