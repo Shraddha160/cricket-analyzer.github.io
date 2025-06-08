@@ -89,6 +89,11 @@ CRICKET_KEYWORDS = {
 # Global lock for FFmpeg operations
 ffmpeg_lock = Lock()
 
+# Flask routes
+@app.route("/")
+def home():
+    return render_template("index.html")
+
 class CricketOCR:
     @staticmethod
     def preprocess_image(image: np.ndarray) -> np.ndarray:
