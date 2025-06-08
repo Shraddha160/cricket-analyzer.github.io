@@ -25,11 +25,9 @@ from threading import Lock
 import subprocess
 
 # Configure MoviePy/FFmpeg settings
-change_settings({
-    "FFMPEG_BINARY": "ffmpeg",
-    "FFMPEG_THREADS": 2,
-    "IMAGEMAGICK_BINARY": None
-})
+# Configure environment
+os.environ["FFMPEG_BINARY"] = "/usr/bin/ffmpeg"
+os.environ["FFMPEG_THREADS"] = "2"
 
 # Suppress warnings
 warnings.filterwarnings('ignore')
