@@ -1,18 +1,10 @@
-# Install system dependencies and ensure Python build tools are available
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    python3-dev \
-    python3-distutils \
-    python3-venv \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.12-slim
 
-# Create virtual environment with system site packages temporarily
-RUN python3 -m venv --system-site-packages /opt/venv && \
-    . /opt/venv/bin/activate && \
-    python3 -m pip install --upgrade pip setuptools wheel
+WORKDIR /app
 
-# Now install your requirements with the cache mount
-RUN --mount=type=cache,id=pip-cache,target=/root/.cache/pip \
-    . /opt/venv/bin/activate && \
-    pip install -r requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["python", "app.py"]
