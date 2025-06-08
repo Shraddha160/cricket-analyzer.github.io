@@ -8,7 +8,6 @@ from flask import Flask, render_template, request, jsonify
 from yt_dlp import YoutubeDL
 import time
 from moviepy.editor import VideoFileClip, concatenate_videoclips
-from moviepy.config import change_settings
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier, RandomForestClassifier
@@ -23,11 +22,6 @@ import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 import subprocess
-
-# Configure MoviePy/FFmpeg settings
-# Configure environment
-os.environ["FFMPEG_BINARY"] = "/usr/bin/ffmpeg"
-os.environ["FFMPEG_THREADS"] = "2"
 
 # Suppress warnings
 warnings.filterwarnings('ignore')
@@ -54,8 +48,9 @@ app.config.update({
     'THREAD_POOL_SIZE': 4
 })
 
-# Set Tesseract path (update this to your Tesseract installation path)
-#pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Configure FFmpeg paths for Linux
+os.environ["FFMPEG_BINARY"] = "/usr/bin/ffmpeg"
+os.environ["FFMPEG_THREADS"] = "2"
 
 # Create directories
 for folder in ["videos", app.config['FRAME_FOLDER'], app.config['CHART_FOLDER'],
@@ -86,11 +81,6 @@ CRICKET_KEYWORDS = {
 
 # Global lock for FFmpeg operations
 ffmpeg_lock = Lock()
-
-# Flask routes
-@app.route("/")
-def home():
-    return render_template("index.html")
 
 class CricketOCR:
     @staticmethod
@@ -422,7 +412,7 @@ def initialize_models():
         print("Models initialized successfully")
     except Exception as e:
         print(f"Model initialization error: {e}")
-        # Fallback to simpler models if the main initialization fails
+        # Fallback to simpler models
         MODELS['svm'] = make_pipeline(StandardScaler(), SVC(probability=True))
         MODELS['ann'] = make_pipeline(StandardScaler(), MLPClassifier())
         MODELS['hybrid'] = VotingClassifier(
@@ -430,7 +420,6 @@ def initialize_models():
             voting='soft'
         )
         
-        # Fit the fallback models
         for model in MODELS.values():
             model.fit(X_train, y_train)
         
@@ -440,7 +429,7 @@ def initialize_models():
 analyzer = CricketAnalyzer()
 initialize_models()
 
-# Flask routes
+# Routes
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -466,6 +455,5 @@ def process_video():
         return jsonify({"error": str(e), "status": "error"}), 500
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT",10000))  # Get port from environment or default 5000
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-
