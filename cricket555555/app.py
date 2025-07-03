@@ -8,6 +8,7 @@ from flask import Flask, render_template, request, jsonify
 from yt_dlp import YoutubeDL
 import time
 from moviepy.editor import VideoFileClip, concatenate_videoclips
+from moviepy.config import change_settings
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier, RandomForestClassifier
@@ -22,6 +23,13 @@ import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 import subprocess
+
+# Configure MoviePy/FFmpeg settings
+change_settings({
+    "FFMPEG_BINARY": "ffmpeg",
+    "FFMPEG_THREADS": 2,
+    "IMAGEMAGICK_BINARY": None
+})
 
 # Suppress warnings
 warnings.filterwarnings('ignore')
@@ -48,9 +56,8 @@ app.config.update({
     'THREAD_POOL_SIZE': 4
 })
 
-# Configure FFmpeg paths for Linux
-os.environ["FFMPEG_BINARY"] = "/usr/bin/ffmpeg"
-os.environ["FFMPEG_THREADS"] = "2"
+# Set Tesseract path (update this to your Tesseract installation path)
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # Create directories
 for folder in ["videos", app.config['FRAME_FOLDER'], app.config['CHART_FOLDER'],
@@ -412,7 +419,7 @@ def initialize_models():
         print("Models initialized successfully")
     except Exception as e:
         print(f"Model initialization error: {e}")
-        # Fallback to simpler models
+        # Fallback to simpler models if the main initialization fails
         MODELS['svm'] = make_pipeline(StandardScaler(), SVC(probability=True))
         MODELS['ann'] = make_pipeline(StandardScaler(), MLPClassifier())
         MODELS['hybrid'] = VotingClassifier(
@@ -420,6 +427,7 @@ def initialize_models():
             voting='soft'
         )
         
+        # Fit the fallback models
         for model in MODELS.values():
             model.fit(X_train, y_train)
         
@@ -429,7 +437,7 @@ def initialize_models():
 analyzer = CricketAnalyzer()
 initialize_models()
 
-# Routes
+# Flask routes
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -455,5 +463,4 @@ def process_video():
         return jsonify({"error": str(e), "status": "error"}), 500
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
